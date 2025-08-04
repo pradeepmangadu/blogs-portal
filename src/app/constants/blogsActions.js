@@ -1,0 +1,1 @@
+export const STORE_KEYS = {LOGIN_DATA: 'loginData'};
