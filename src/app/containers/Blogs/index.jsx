@@ -1,8 +1,17 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useHistory } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { addBlog } from "../../store/blogs/blogsSlice";
 import AlertModal from '../../components/AlertModal';
+import { db } from "../../firebase-config";
+import {
+  collection,
+  addDoc,
+  getDocs,
+  doc,
+  updateDoc,
+  deleteDoc,
+} from "firebase/firestore";
 
 const styles = {
   Screen: {
@@ -15,7 +24,7 @@ const styles = {
     alignItems: "center",
   },
   Card: {
-    backgroundColor: "#ffffff",
+    backgroundColor: "#fefefe",
     borderRadius: "12px",
     boxShadow: "0 8px 16px rgba(0,0,0,0.1)",
     padding: "30px",
@@ -64,6 +73,7 @@ const styles = {
     fontSize: "16px",
     cursor: "pointer",
     fontWeight: "500",
+    marginBottom: "10px",
   },
   BlogList: {
     width: "100%",
@@ -87,41 +97,118 @@ const styles = {
     color: "#555",
     lineHeight: "1.6",
   },
+  ActionButtons: {
+    display: "flex",
+    gap: "10px",
+    marginTop: "10px",
+  },
+  smallButton: {
+   padding: "6px 12px",
+   backgroundColor: "#5ac8fa",
+   color: "#fff",
+   border: "none",
+   borderRadius: "6px",
+   fontSize: "12px",
+   cursor: "pointer",
+   fontWeight: "500",
+  },
 };
 
 const Blogs = () => {
   const history = useHistory();
   const dispatch = useDispatch();
-  const blogs = useSelector((state) => state.blogsSlice.blogs || []);
 
   const [newBlogTitle, setNewBlogTitle] = useState("");
   const [newBlogContent, setNewBlogContent] = useState("");
   const [alertInfo, setAlertInfo] = useState({ title: '', message: '' });
+  const [fetchedBlogs, setFetchedBlogs] = useState([]);
+
+  const [editingBlogId, setEditingBlogId] = useState(null);
+  const [editingTitle, setEditingTitle] = useState("");
+  const [editingContent, setEditingContent] = useState("");
 
   const handleSignOut = () => {
     history.push("/");
   };
 
-  const handlePost = () => {
+  const handlePost = async () => {
     if (!newBlogTitle.trim() || !newBlogContent.trim()) {
       setAlertInfo({ title: 'Blog Post', message: 'Blog title and content cannot be empty.' });
       return;
     }
 
     const newBlog = {
-      id: Date.now(),
       title: newBlogTitle,
       content: newBlogContent,
+      createdAt: new Date().toISOString(),
     };
 
-    dispatch(addBlog(newBlog));
-    setNewBlogTitle("");
-    setNewBlogContent("");
+    try {
+      await addDoc(collection(db, "blogs"), newBlog);
+      dispatch(addBlog({ ...newBlog, id: Date.now() }));
+      setNewBlogTitle("");
+      setNewBlogContent("");
+      fetchBlogsFromFirestore();
+    } catch (error) {
+      setAlertInfo({ title: 'Error', message: 'Failed to post blog. Please try again.' });
+      console.error("Error adding blog to Firestore:", error);
+    }
+  };
+
+  const fetchBlogsFromFirestore = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, "blogs"));
+      const blogsData = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setFetchedBlogs(blogsData);
+    } catch (error) {
+      console.error("Error fetching blogs:", error);
+      setAlertInfo({ title: 'Error', message: 'Failed to load blogs.' });
+    }
+  };
+
+  const startEditing = (blog) => {
+    setEditingBlogId(blog.id);
+    setEditingTitle(blog.title);
+    setEditingContent(blog.content);
+  };
+
+  const updateBlog = async () => {
+    if (!editingTitle.trim() || !editingContent.trim()) return;
+
+    try {
+      const blogRef = doc(db, "blogs", editingBlogId);
+      await updateDoc(blogRef, {
+        title: editingTitle,
+        content: editingContent,
+      });
+      setEditingBlogId(null);
+      setEditingTitle("");
+      setEditingContent("");
+      fetchBlogsFromFirestore();
+    } catch (error) {
+      console.error("Error updating blog:", error);
+    }
+  };
+
+  const deleteBlog = async (id) => {
+    try {
+      await deleteDoc(doc(db, "blogs", id));
+      fetchBlogsFromFirestore();
+    } catch (error) {
+      console.error("Error deleting blog:", error);
+    }
   };
 
   const handleAlertClose = () => {
     setAlertInfo({ title: '', message: '' });
   };
+
+  useEffect(() => {
+    fetchBlogsFromFirestore();
+  }, []);
 
   return (
     <div style={styles.Screen}>
@@ -139,26 +226,51 @@ const Blogs = () => {
           </button>
         </div>
 
-        <input
-          style={styles.Input}
-          placeholder="Blog Title"
-          value={newBlogTitle}
-          onChange={(e) => setNewBlogTitle(e.target.value)}
-        />
-        <textarea
-          style={{ ...styles.Input, height: "120px", resize: "vertical" }}
-          placeholder="What's on your mind?"
-          value={newBlogContent}
-          onChange={(e) => setNewBlogContent(e.target.value)}
-        />
-        <button style={styles.Button} onClick={handlePost}>Post</button>
+        {editingBlogId ? (
+          <>
+            <input
+              style={styles.Input}
+              value={editingTitle}
+              onChange={(e) => setEditingTitle(e.target.value)}
+              placeholder="Edit Title"
+            />
+            <textarea
+              style={{ ...styles.Input, height: "120px", resize: "vertical" }}
+              value={editingContent}
+              onChange={(e) => setEditingContent(e.target.value)}
+              placeholder="Edit Content"
+            />
+            <button style={styles.Button} onClick={updateBlog}>Update</button>
+            <button style={styles.SignOutButton} onClick={() => setEditingBlogId(null)}>Cancel</button>
+          </>
+        ) : (
+          <>
+            <input
+              style={styles.Input}
+              placeholder="Blog Title"
+              value={newBlogTitle}
+              onChange={(e) => setNewBlogTitle(e.target.value)}
+            />
+            <textarea
+              style={{ ...styles.Input, height: "120px", resize: "vertical" }}
+              placeholder="What's on your mind?"
+              value={newBlogContent}
+              onChange={(e) => setNewBlogContent(e.target.value)}
+            />
+            <button style={styles.Button} onClick={handlePost}>Post</button>
+          </>
+        )}
       </div>
 
       <div style={styles.BlogList}>
-        {blogs.map((blog) => (
+        {fetchedBlogs.map((blog) => (
           <div key={blog.id} style={styles.BlogItem}>
             <h3 style={styles.BlogTitle}>{blog.title}</h3>
             <p style={styles.BlogContent}>{blog.content}</p>
+            <div style={styles.ActionButtons}>
+              <button style={styles.smallButton} onClick={() => startEditing(blog)}>Edit</button>
+              <button style={styles.SignOutButton} onClick={() => deleteBlog(blog.id)}>Delete</button>
+            </div>
           </div>
         ))}
       </div>
