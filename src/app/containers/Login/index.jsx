@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { useHistory, Link } from "react-router-dom";
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth,db } from '../../firebase-config';
+import { auth, db } from '../../firebase-config';
 import { paths } from "../../constants/paths";
 import AlertModal from '../../components/AlertModal';
-import { doc, setDoc,getDocs, collection, query, where } from 'firebase/firestore';
+import { doc, setDoc, getDocs, collection, query, where } from 'firebase/firestore';
 
 const styles = {
   Screen: {
@@ -74,16 +74,22 @@ const Login = (props) => {
       const usersRef = collection(db, 'users');
       const q = query(usersRef, where('username', '==', username));
       const querySnapshot = await getDocs(q);
-       if (querySnapshot.empty) {
+      if (querySnapshot.empty) {
         // setIsSignUpSuccess(false);
         setAlertInfo({ title: 'Sign In Error', message: 'No User with this email exists.' });
         return;
       }
       const userDoc = querySnapshot.docs[0];
-      const userData = userDoc.data();
-      if(userData.password !== password){
-         setAlertInfo({ title: 'Sign In Error', message: 'Invalid User Credentials.' });
-         return;
+      let userData;
+      try {
+        userData = userDoc.data();
+      } catch (e) {
+        console.log("Exception in login:", e.message);
+      }
+
+      if (userData && userData.password !== password) {
+        setAlertInfo({ title: 'Sign In Error', message: 'Invalid User Credentials.' });
+        return;
       }
       history.push(paths.BLOGS.path);
     } catch (error) {
