@@ -114,7 +114,7 @@ const SignUp = (props) => {
         return;
       }
 
-      await setDoc(doc(db, 'users', currentUser.uid), { name, username });
+      await setDoc(doc(db, 'users', currentUser.uid), { name, username,password });
 
       setIsSignUpSuccess(true);
       setAlertInfo({ title: 'Sign Up', message: 'Account created successfully!' });
