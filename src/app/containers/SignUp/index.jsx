@@ -1,72 +1,68 @@
 import React, { useState } from 'react';
 import { useHistory, Link } from 'react-router-dom';
-import {
-  createUserWithEmailAndPassword,
-  linkWithCredential,
-  EmailAuthProvider,
-  updateProfile,
-} from 'firebase/auth';
-import { doc, setDoc, getDocs, collection, query, where} from 'firebase/firestore';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { doc, setDoc, getDocs, collection, query, where
+} from 'firebase/firestore';
 import { auth, db } from '../../firebase-config';
 import AlertModal from '../../components/AlertModal';
 
 const styles = {
   Screen: {
-    backgroundColor: '#ffffff',
-    position:'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%,-50%)',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100vh',
+    background: "linear-gradient(to right, #74ebd5, #ACB6E5)",
+    fontFamily: 'Poppins, sans-serif',
   },
-  Text: {
-    marginLeft: '30%',
-    color: '#030303',
-    fontSize: '24px',
-    fontFamily: 'Roboto Mono',
-    letterSpacing: '-0.6px',
-    lineHeight: '32px',
-    marginBottom: '20px',
+  Card: {
+    backdropFilter: 'blur(10px)',
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    padding: '40px',
+    borderRadius: '16px',
+    boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+    width: '100%',
+    maxWidth: '400px',
+    textAlign: 'center',
+    color: '#000',
+  },
+  Title: {
+    fontSize: '26px',
+    fontWeight: '600',
+    marginBottom: '30px',
+    color: '#333',
   },
   Input: {
-    top: '306px',
-    left: '475px',
-    width: '435px',
-    height: '67px',
-    padding: '0px 8px',
-    border: '1px solid #030303',
-    boxSizing: 'border-box',
-    borderRadius: '2px',
-    backgroundColor: '#e6e6e6',
-    color: '#94a3b8',
-    fontSize: '14px',
-    fontFamily: 'Roboto Mono',
-    lineHeight: '46px',
-    outline: 'none',
+    width: '100%',
+    padding: '12px',
     marginBottom: '20px',
+    borderRadius: '8px',
+    border: '1px solid #ccc',
+    fontSize: '16px',
+    backgroundColor: 'rgba(255,255,255,0.6)',
+    color: '#333',
+    outline: 'none',
   },
   Button: {
-    marginLeft: '12%',
-    cursor: 'pointer',
-    top: '550px',
-    left: '478px',
-    width: '320px',
-    height: '60px',
-    padding: '0px 8px',
-    border: '1px solid #030303',
-    boxSizing: 'border-box',
-    boxShadow: '2px 2px 0px rgba(0,0,0,0.8)',
+    width: '100%',
+    padding: '12px',
     backgroundColor: '#5ac8fa',
-    color: '#030303',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '16px',
+    cursor: 'pointer',
+    transition: 'transform 0.2s ease',
+    marginBottom: '10px',
+  },
+  Link: {
+    color: '#333',
+    textDecoration: 'underline',
     fontSize: '14px',
-    fontFamily: 'Roboto Mono',
-    lineHeight: '20px',
-    textTransform: 'uppercase',
-    outline: 'none',
-    marginBottom: '20px',
   },
 };
 
-const SignUp = (props) => {
+const SignUp = () => {
   const [name, setName] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -84,26 +80,6 @@ const SignUp = (props) => {
     }
 
     try {
-      const currentUser = auth.currentUser;
-      let user;
-
-      if (currentUser && currentUser.isAnonymous) {
-        // An anonymous user exists, so link the new credentials
-        // const credential = EmailAuthProvider.credential(username, password);
-        // const userCredential = await linkWithCredential(currentUser, credential);
-        // user = userCredential.user;
-        // Update the user's profile with their name
-        // await updateProfile(user, { displayName: name });
-      } else {
-        // No user or a non-anonymous user, so create a new account
-        const userCredential = await createUserWithEmailAndPassword(auth, username, password);
-        user = userCredential.user;
-        await updateProfile(user, { displayName: name });
-      }
-
-      // Save/update user info in Firestore.
-      // It's a major security risk to store passwords in Firestore.
-      // Firebase Auth handles this securely behind the scenes.
       const usersRef = collection(db, 'users');
       const q = query(usersRef, where('username', '==', username));
       const querySnapshot = await getDocs(q);
@@ -114,7 +90,15 @@ const SignUp = (props) => {
         return;
       }
 
-      await setDoc(doc(db, 'users', currentUser.uid), { name, username,password });
+      const userCredential = await createUserWithEmailAndPassword(auth, username, password);
+      const user = userCredential.user;
+      await updateProfile(user, { displayName: name });
+
+      await setDoc(doc(db, 'users', user.uid), {
+        name,
+        username,
+        // Do NOT store password in Firestore in production
+      });
 
       setIsSignUpSuccess(true);
       setAlertInfo({ title: 'Sign Up', message: 'Account created successfully!' });
@@ -128,46 +112,55 @@ const SignUp = (props) => {
   const handleAlertClose = () => {
     setAlertInfo({ title: '', message: '' });
     if (isSignUpSuccess) {
-      history.push('/'); 
+      history.push('/');
     }
   };
 
   return (
     <div style={styles.Screen}>
-      <AlertModal
-        title={alertInfo.title}
-        message={alertInfo.message}
-        onClose={handleAlertClose}
-      />
-      <div style={styles.Text}>SignUp</div>
-      <form onSubmit={handleSignUp}>
-        <div>
-          <input style={styles.Input} placeholder={'Name'} value={name} onChange={(e) => setName(e.target.value)} required />
-        </div>
-        <div>
-          <input style={styles.Input} placeholder={'Username (Email)'} type="email" value={username} onChange={(e) => setUsername(e.target.value)} required />
-        </div>
-        <div>
-          <input style={styles.Input} placeholder={'Password'} type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-        </div>
-        <div>
-          <input style={styles.Input} placeholder={'Confirm Password'} type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
-        </div>
-        <div style={{ marginBottom: '40px' }}>
-          <div>
-            <button type="submit" style={styles.Button}>
-              Sign Up
-            </button>
-          </div>
-          <div>
-            <Link to="/" style={{ textDecoration: 'none' }}>
-              <button type="button" style={styles.Button}>
-                Back to Login
-              </button>
-            </Link>
-          </div>
-        </div>
-      </form>
+      <div style={styles.Card}>
+        <AlertModal
+          title={alertInfo.title}
+          message={alertInfo.message}
+          onClose={handleAlertClose}
+        />
+        <div style={styles.Title}>🎉 Create Your Account</div>
+        <form onSubmit={handleSignUp}>
+          <input
+            style={styles.Input}
+            placeholder="Full Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+          />
+          <input
+            style={styles.Input}
+            placeholder="Email"
+            type="email"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+          />
+          <input
+            style={styles.Input}
+            placeholder="Password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          <input
+            style={styles.Input}
+            placeholder="Confirm Password"
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+          />
+          <button type="submit" style={styles.Button}>Sign Up</button>
+          <Link to="/" style={styles.Link}>Back to Login</Link>
+        </form>
+      </div>
     </div>
   );
 };

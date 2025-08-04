@@ -6,142 +6,105 @@ import AlertModal from '../../components/AlertModal';
 
 const styles = {
   Screen: {
-    backgroundColor: "#ffffff",
+    background: "linear-gradient(to right, #74ebd5, #ACB6E5)",
+    minHeight: "100vh",
+    padding: "40px 20px",
+    fontFamily: "Poppins, sans-serif",
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
-    padding: "5vh 20px",
-    boxSizing: "border-box",
   },
-  Text: {
-    fontSize: "24px",
-    fontFamily: "Roboto Mono",
-    letterSpacing: "-0.6px",
-    lineHeight: "32px",
-  },
-  header: {
+  Card: {
+    backgroundColor: "#ffffff",
+    borderRadius: "12px",
+    boxShadow: "0 8px 16px rgba(0,0,0,0.1)",
+    padding: "30px",
     width: "100%",
-    maxWidth: "1100px",
+    maxWidth: "800px",
+    marginBottom: "40px",
+  },
+  Header: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: "40px",
+    marginBottom: "30px",
   },
-  postContainer: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    width: "100%",
-    maxWidth: "800px",
-    marginBottom: "40px",
+  Title: {
+    fontSize: "28px",
+    fontWeight: "600",
+    color: "#333",
   },
-  titleInput: {
-    width: "100%",
-    height: "50px",
-    padding: "10px",
-    border: "1px solid #030303",
-    boxSizing: "border-box",
-    borderRadius: "2px",
-    backgroundColor: "#e6e6e6",
-    color: "#030303",
-    fontSize: "16px",
-    fontFamily: "Roboto Mono",
-    lineHeight: "1.5",
-    outline: "none",
-    marginBottom: "10px",
+  SignOutButton: {
+    backgroundColor: "#ff6b6b",
+    color: "#fff",
+    border: "none",
+    padding: "10px 20px",
+    borderRadius: "8px",
+    cursor: "pointer",
+    fontWeight: "500",
   },
-  contentInput: {
+  Input: {
     width: "100%",
-    height: "150px",
-    padding: "10px",
-    border: "1px solid #030303",
-    boxSizing: "border-box",
-    borderRadius: "2px",
-    backgroundColor: "#e6e6e6",
-    color: "#030303",
-    fontSize: "14px",
-    fontFamily: "Roboto Mono",
-    lineHeight: "1.5",
-    outline: "none",
-    resize: "vertical",
+    padding: "12px",
     marginBottom: "20px",
+    borderRadius: "8px",
+    border: "1px solid #ccc",
+    fontSize: "16px",
+    backgroundColor: "#f9f9f9",
+    color: "#333",
+    outline: "none",
   },
   Button: {
-    cursor: "pointer",
-    width: "320px",
-    height: "60px",
-    padding: "0px 8px",
-    border: "1px solid #030303",
-    boxSizing: "border-box",
-    boxShadow: "2px 2px 0px rgba(0,0,0,0.8)",
+    width: "100%",
+    padding: "12px",
     backgroundColor: "#5ac8fa",
-    color: "#030303",
-    fontSize: "14px",
-    fontFamily: "Roboto Mono",
-    lineHeight: "20px",
-    textTransform: "uppercase",
-    outline: "none",
-  },
-  signOutButton: {
+    color: "#fff",
+    border: "none",
+    borderRadius: "8px",
+    fontSize: "16px",
     cursor: "pointer",
-    padding: "10px 20px",
-    border: "1px solid #030303",
-    boxSizing: "border-box",
-    boxShadow: "2px 2px 0px rgba(0,0,0,0.8)",
-    backgroundColor: "#ff6b6b",
-    color: "#ffffff",
-    fontSize: "14px",
-    fontFamily: "Roboto Mono",
-    lineHeight: "20px",
-    textTransform: "uppercase",
-    outline: "none",
-    height: "fit-content",
+    fontWeight: "500",
   },
-  blogListContainer: {
-    marginTop: "50px",
+  BlogList: {
     width: "100%",
     maxWidth: "800px",
   },
-  blogItem: {
-    backgroundColor: "#f9f9f9",
-    border: "1px solid #ddd",
-    borderRadius: "4px",
+  BlogItem: {
+    backgroundColor: "#fff",
+    borderRadius: "8px",
     padding: "20px",
     marginBottom: "20px",
-    boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-    textAlign: "left",
+    boxShadow: "0 4px 8px rgba(0,0,0,0.05)",
   },
-  blogTitle: {
-    fontFamily: "Roboto Mono, monospace",
-    color: "#333",
-    margin: "0 0 10px 0",
+  BlogTitle: {
     fontSize: "20px",
+    fontWeight: "600",
+    marginBottom: "10px",
+    color: "#333",
   },
-  blogContent: {
-    fontFamily: "Roboto Mono, monospace",
-    color: "#666",
+  BlogContent: {
+    fontSize: "16px",
+    color: "#555",
     lineHeight: "1.6",
-    margin: "0",
-    fontSize: "14px",
   },
 };
 
-const Blogs = (props) => {
+const Blogs = () => {
   const history = useHistory();
   const dispatch = useDispatch();
+  const blogs = useSelector((state) => state.blogsSlice.blogs || []);
+
+  const [newBlogTitle, setNewBlogTitle] = useState("");
+  const [newBlogContent, setNewBlogContent] = useState("");
+  const [alertInfo, setAlertInfo] = useState({ title: '', message: '' });
 
   const handleSignOut = () => {
     history.push("/");
   };
 
-  const blogs = useSelector((state) => state.blogsSlice.blogs || []);
-  const [newBlogTitle, setNewBlogTitle] = useState("");
-  const [newBlogContent, setNewBlogContent] = useState("");
-  const [alertInfo, setAlertInfo] = useState({ title: '', message: '' });
-
   const handlePost = () => {
     if (!newBlogTitle.trim() || !newBlogContent.trim()) {
-        setAlertInfo({ title: 'Blog Post', message: 'Blog title and content cannot be empty.' });
+      setAlertInfo({ title: 'Blog Post', message: 'Blog title and content cannot be empty.' });
       return;
     }
 
@@ -152,7 +115,7 @@ const Blogs = (props) => {
     };
 
     dispatch(addBlog(newBlog));
-    setNewBlogTitle(""); 
+    setNewBlogTitle("");
     setNewBlogContent("");
   };
 
@@ -162,38 +125,40 @@ const Blogs = (props) => {
 
   return (
     <div style={styles.Screen}>
-         <AlertModal
-                title={alertInfo.title}
-                message={alertInfo.message}
-                onClose={handleAlertClose}
-              />
-      <div style={styles.header}>
-        <div style={styles.Text}>BlogsPortal</div>
-        <button style={styles.signOutButton} onClick={handleSignOut}>
-          Sign Out
-        </button>
-      </div>
-      <div style={styles.postContainer}>
+      <AlertModal
+        title={alertInfo.title}
+        message={alertInfo.message}
+        onClose={handleAlertClose}
+      />
+
+      <div style={styles.Card}>
+        <div style={styles.Header}>
+          <div style={styles.Title}>📝 BlogsPortal</div>
+          <button style={styles.SignOutButton} onClick={handleSignOut}>
+            Sign Out
+          </button>
+        </div>
+
         <input
-          style={styles.titleInput}
-          placeholder={"Blog Title"}
+          style={styles.Input}
+          placeholder="Blog Title"
           value={newBlogTitle}
           onChange={(e) => setNewBlogTitle(e.target.value)}
         />
         <textarea
-          style={styles.contentInput}
-          placeholder={"What's on your mind?"}
+          style={{ ...styles.Input, height: "120px", resize: "vertical" }}
+          placeholder="What's on your mind?"
           value={newBlogContent}
           onChange={(e) => setNewBlogContent(e.target.value)}
         />
         <button style={styles.Button} onClick={handlePost}>Post</button>
       </div>
 
-      <div style={styles.blogListContainer}>
+      <div style={styles.BlogList}>
         {blogs.map((blog) => (
-          <div key={blog.id} style={styles.blogItem}>
-            <h3 style={styles.blogTitle}>{blog.title}</h3>
-            <p style={styles.blogContent}>{blog.content}</p>
+          <div key={blog.id} style={styles.BlogItem}>
+            <h3 style={styles.BlogTitle}>{blog.title}</h3>
+            <p style={styles.BlogContent}>{blog.content}</p>
           </div>
         ))}
       </div>

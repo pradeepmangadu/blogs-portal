@@ -8,57 +8,51 @@ import { doc, setDoc, getDocs, collection, query, where } from 'firebase/firesto
 
 const styles = {
   Screen: {
-    backgroundColor: "#ffffff",
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%,-50%)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    height: "100vh",
+    background: "linear-gradient(to right, #74ebd5, #ACB6E5)",
+    fontFamily: "Poppins, sans-serif",
   },
-  Text: {
-    marginLeft: "30%",
-    color: "#030303",
-    fontSize: "24px",
-    fontFamily: "Roboto Mono",
-    letterSpacing: "-0.6px",
-    lineHeight: "32px",
-    marginBottom: "20px",
+  Card: {
+    backgroundColor: "#fff",
+    padding: "40px",
+    borderRadius: "12px",
+    boxShadow: "0 8px 16px rgba(0,0,0,0.2)",
+    width: "100%",
+    maxWidth: "400px",
+    textAlign: "center",
+  },
+  Title: {
+    fontSize: "28px",
+    fontWeight: "600",
+    marginBottom: "30px",
+    color: "#333",
   },
   Input: {
-    top: "306px",
-    left: "475px",
-    width: "435px",
-    height: "67px",
-    padding: "0px 8px",
-    border: "1px solid #030303",
-    boxSizing: "border-box",
-    borderRadius: "2px",
-    backgroundColor: "#e6e6e6",
-    color: "#94a3b8",
-    fontSize: "14px",
-    fontFamily: "Roboto Mono",
-    lineHeight: "46px",
-    outline: "none",
+    width: "100%",
+    padding: "12px",
     marginBottom: "20px",
+    borderRadius: "8px",
+    border: "1px solid #ccc",
+    fontSize: "16px",
   },
   Button: {
-    marginLeft: "12%",
-    cursor: "pointer",
-    top: "550px",
-    left: "478px",
-    width: "320px",
-    height: "60px",
-    padding: "0px 8px",
-    border: "1px solid #030303",
-    boxSizing: "border-box",
-    boxShadow: "2px 2px 0px rgba(0,0,0,0.8)",
+    width: "100%",
+    padding: "12px",
     backgroundColor: "#5ac8fa",
-    color: "#030303",
+    color: "#fff",
+    border: "none",
+    borderRadius: "8px",
+    fontSize: "16px",
+    cursor: "pointer",
+    marginBottom: "10px",
+  },
+  Link: {
+    color: "#5ac8fa",
+    textDecoration: "none",
     fontSize: "14px",
-    fontFamily: "Roboto Mono",
-    lineHeight: "20px",
-    textTransform: "uppercase",
-    outline: "none",
-    marginBottom: "20px",
   },
 };
 
@@ -103,50 +97,34 @@ const Login = (props) => {
 
   return (
     <div style={styles.Screen}>
-      <AlertModal
-        title={alertInfo.title}
-        message={alertInfo.message}
-        onClose={handleAlertClose}
-      />
-      <div style={styles.Text}>BlogsPortal</div>
-      <form onSubmit={handleSignIn}>
-        <div>
-          <input
-            style={styles.Input}
-            placeholder={"Username (Email)"}
-            type="email"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-          />
+      <div style={styles.Card}>
+        <div style={styles.Title}>BlogsPortal Login</div>
+          <form onSubmit={handleSignIn}>
+            <input
+              style={styles.Input}
+              type="email"
+              placeholder="Email"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+            />
+            <input
+              style={styles.Input}
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+            <button type="submit" style={styles.Button}>Sign In</button>
+            <Link to={paths.SIGNUP.path} style={styles.Link}>Sign Up</Link>
+            <div style={{ marginTop: "10px" }}>
+              <Link to="/forgot-password" style={styles.Link}>Forgot Password?</Link>
+            </div>
+          </form>
         </div>
-        <div>
-          <input
-            style={styles.Input}
-            placeholder={"Password"}
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        <div style={{ marginBottom: "40px" }}>
-          <div>
-            <button type="submit" style={styles.Button}>
-              Sign In
-            </button>
-          </div>
-          <div>
-            <Link to={paths.SIGNUP.path} style={{ textDecoration: 'none' }}>
-              <button type="button" style={styles.Button}>
-                Sign Up
-              </button>
-            </Link>
-          </div>
-        </div>
-      </form>
-    </div>
-  );
+      </div>
+    );
 };
 
 export default Login;
