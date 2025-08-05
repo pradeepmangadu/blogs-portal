@@ -97,6 +97,12 @@ const styles = {
     color: "#555",
     lineHeight: "1.6",
   },
+  BlogCategory: {
+    fontSize: "14px",
+    fontStyle: "italic",
+    color: "#777",
+    marginBottom: "10px",
+  },
   ActionButtons: {
     display: "flex",
     gap: "10px",
@@ -120,26 +126,29 @@ const Blogs = () => {
 
   const [newBlogTitle, setNewBlogTitle] = useState("");
   const [newBlogContent, setNewBlogContent] = useState("");
+  const [newBlogCategory, setNewBlogCategory] = useState("");
   const [alertInfo, setAlertInfo] = useState({ title: '', message: '' });
   const [fetchedBlogs, setFetchedBlogs] = useState([]);
 
   const [editingBlogId, setEditingBlogId] = useState(null);
   const [editingTitle, setEditingTitle] = useState("");
   const [editingContent, setEditingContent] = useState("");
+  const [editingCategory, setEditingCategory] = useState("");
 
   const handleSignOut = () => {
     history.push("/");
   };
 
   const handlePost = async () => {
-    if (!newBlogTitle.trim() || !newBlogContent.trim()) {
-      setAlertInfo({ title: 'Blog Post', message: 'Blog title and content cannot be empty.' });
+    if (!newBlogTitle.trim() || !newBlogContent.trim() || !newBlogCategory.trim()) {
+      setAlertInfo({ title: 'Blog Post', message: 'Blog title, content, and category cannot be empty.' });
       return;
     }
 
     const newBlog = {
       title: newBlogTitle,
       content: newBlogContent,
+      category: newBlogCategory,
       createdAt: new Date().toISOString(),
     };
 
@@ -148,6 +157,7 @@ const Blogs = () => {
       dispatch(addBlog({ ...newBlog, id: Date.now() }));
       setNewBlogTitle("");
       setNewBlogContent("");
+      setNewBlogCategory("");
       fetchBlogsFromFirestore();
     } catch (error) {
       setAlertInfo({ title: 'Error', message: 'Failed to post blog. Please try again.' });
@@ -173,20 +183,23 @@ const Blogs = () => {
     setEditingBlogId(blog.id);
     setEditingTitle(blog.title);
     setEditingContent(blog.content);
+    setEditingCategory(blog.category || "");
   };
 
   const updateBlog = async () => {
-    if (!editingTitle.trim() || !editingContent.trim()) return;
+    if (!editingTitle.trim() || !editingContent.trim() || !editingCategory.trim()) return;
 
     try {
       const blogRef = doc(db, "blogs", editingBlogId);
       await updateDoc(blogRef, {
         title: editingTitle,
         content: editingContent,
+        category: editingCategory,
       });
       setEditingBlogId(null);
       setEditingTitle("");
       setEditingContent("");
+      setEditingCategory("");
       fetchBlogsFromFirestore();
     } catch (error) {
       console.error("Error updating blog:", error);
@@ -234,6 +247,12 @@ const Blogs = () => {
               onChange={(e) => setEditingTitle(e.target.value)}
               placeholder="Edit Title"
             />
+            <input
+              style={styles.Input}
+              value={editingCategory}
+              onChange={(e) => setEditingCategory(e.target.value)}
+              placeholder="Edit Category"
+            />
             <textarea
               style={{ ...styles.Input, height: "120px", resize: "vertical" }}
               value={editingContent}
@@ -251,6 +270,12 @@ const Blogs = () => {
               value={newBlogTitle}
               onChange={(e) => setNewBlogTitle(e.target.value)}
             />
+            <input
+              style={styles.Input}
+              placeholder="Category"
+              value={newBlogCategory}
+              onChange={(e) => setNewBlogCategory(e.target.value)}
+            />
             <textarea
               style={{ ...styles.Input, height: "120px", resize: "vertical" }}
               placeholder="What's on your mind?"
@@ -266,6 +291,7 @@ const Blogs = () => {
         {fetchedBlogs.map((blog) => (
           <div key={blog.id} style={styles.BlogItem}>
             <h3 style={styles.BlogTitle}>{blog.title}</h3>
+            <p style={styles.BlogCategory}>Category: {blog.category}</p>
             <p style={styles.BlogContent}>{blog.content}</p>
             <div style={styles.ActionButtons}>
               <button style={styles.smallButton} onClick={() => startEditing(blog)}>Edit</button>
