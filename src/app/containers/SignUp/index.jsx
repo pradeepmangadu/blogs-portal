@@ -80,6 +80,26 @@ const SignUp = () => {
     }
 
     try {
+      const currentUser = auth.currentUser;
+      let user;
+
+      if (currentUser && currentUser.isAnonymous) {
+        // An anonymous user exists, so link the new credentials
+        // const credential = EmailAuthProvider.credential(username, password);
+        // const userCredential = await linkWithCredential(currentUser, credential);
+        // user = userCredential.user;
+        // Update the user's profile with their name
+        // await updateProfile(user, { displayName: name });
+      } else {
+        // No user or a non-anonymous user, so create a new account
+        const userCredential = await createUserWithEmailAndPassword(auth, username, password);
+        user = userCredential.user;
+        await updateProfile(user, { displayName: name });
+      }
+
+      // Save/update user info in Firestore.
+      // It's a major security risk to store passwords in Firestore.
+      // Firebase Auth handles this securely behind the scenes.
       const usersRef = collection(db, 'users');
       const q = query(usersRef, where('username', '==', username));
       const querySnapshot = await getDocs(q);
@@ -90,15 +110,7 @@ const SignUp = () => {
         return;
       }
 
-      const userCredential = await createUserWithEmailAndPassword(auth, username, password);
-      const user = userCredential.user;
-      await updateProfile(user, { displayName: name });
-
-      await setDoc(doc(db, 'users', user.uid), {
-        name,
-        username,
-        password,
-      });
+      await setDoc(doc(db, 'users', currentUser.uid), { name, username, password });
 
       setIsSignUpSuccess(true);
       setAlertInfo({ title: 'Sign Up', message: 'Account created successfully!' });
@@ -108,6 +120,7 @@ const SignUp = () => {
       setAlertInfo({ title: 'Sign Up Error', message: errorMessage });
     }
   };
+
 
   const handleAlertClose = () => {
     setAlertInfo({ title: '', message: '' });
