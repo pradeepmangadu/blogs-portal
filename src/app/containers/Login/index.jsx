@@ -91,10 +91,6 @@ const Login = (props) => {
     }
   };
 
-  const handleAlertClose = () => {
-    setAlertInfo({ title: '', message: '' });
-  };
-
   return (
     <div style={styles.Screen}>
       <div style={styles.Card}>
