@@ -97,7 +97,7 @@ const SignUp = () => {
       await setDoc(doc(db, 'users', user.uid), {
         name,
         username,
-        // Do NOT store password in Firestore in production
+        password,
       });
 
       setIsSignUpSuccess(true);
