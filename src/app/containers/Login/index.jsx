@@ -114,9 +114,9 @@ const Login = (props) => {
             />
             <button type="submit" style={styles.Button}>Sign In</button>
             <Link to={paths.SIGNUP.path} style={styles.Link}>Sign Up</Link>
-            <div style={{ marginTop: "10px" }}>
+            {/* <div style={{ marginTop: "10px" }}>
               <Link to="/forgot-password" style={styles.Link}>Forgot Password?</Link>
-            </div>
+            </div> */}
           </form>
         </div>
       </div>
