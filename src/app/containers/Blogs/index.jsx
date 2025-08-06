@@ -158,6 +158,7 @@ const Blogs = () => {
       setNewBlogTitle("");
       setNewBlogContent("");
       setNewBlogCategory("");
+      setAlertInfo({ title: 'Success', message: 'Blog posted successfully!' });
       fetchBlogsFromFirestore();
     } catch (error) {
       setAlertInfo({ title: 'Error', message: 'Failed to post blog. Please try again.' });
@@ -200,6 +201,7 @@ const Blogs = () => {
       setEditingTitle("");
       setEditingContent("");
       setEditingCategory("");
+      setAlertInfo({ title: 'Success', message: 'Blog updated successfully!' });
       fetchBlogsFromFirestore();
     } catch (error) {
       console.error("Error updating blog:", error);
@@ -209,6 +211,7 @@ const Blogs = () => {
   const deleteBlog = async (id) => {
     try {
       await deleteDoc(doc(db, "blogs", id));
+      setAlertInfo({ title: 'Success', message: 'Blog deleted successfully!' });
       fetchBlogsFromFirestore();
     } catch (error) {
       console.error("Error deleting blog:", error);
