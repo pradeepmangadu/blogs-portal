@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useHistory } from "react-router-dom";
+import AlertModal from "../../../components/AlertModal";
 import { paths } from "../../../constants/paths";
 import { db } from '../../../firebase-config';
 import {
@@ -67,6 +68,19 @@ const styles = {
         border: '1px solid #ddd',
         textAlign: 'left',
     },
+    viewButton: {
+        background: 'none',
+        border: 'none',
+        cursor: 'pointer',
+        fontSize: '20px',
+        padding: '0'
+    },
+    modalMessageContent: {
+        maxHeight: '60vh',
+        overflowY: 'auto',
+        whiteSpace: 'pre-wrap',
+        textAlign: 'left',
+    },
 };
 
 const Search = () => {
@@ -74,6 +88,8 @@ const Search = () => {
     const [category, setCategory] = useState("");
     const [searchResults, setSearchResults] = useState([]);
     const [categories, setCategories] = useState([]);
+    const [showContentModal, setShowContentModal] = useState(false);
+    const [modalContent, setModalContent] = useState({ title: '', content: '' });
     const history = useHistory();
 
     useEffect(() => {
@@ -82,6 +98,16 @@ const Search = () => {
             setAuthor(email.toLowerCase()); // Normalize email
         }
     }, []);
+
+    const handleViewContent = (blog) => {
+        setModalContent({ title: blog.title, content: blog.content });
+        setShowContentModal(true);
+    };
+
+    const handleCloseModal = () => {
+        setShowContentModal(false);
+        setModalContent({ title: '', content: '' });
+    };
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -148,6 +174,17 @@ const Search = () => {
 
     return (
         <div style={styles.Screen}>
+            {showContentModal && (
+                <AlertModal
+                    title={modalContent.title}
+                    message={(
+                        <div style={styles.modalMessageContent}>
+                            {modalContent.content}
+                        </div>
+                    )}
+                    onClose={handleCloseModal}
+                />
+            )}
             <div style={styles.SearchContainer}>
                 <input
                     type="text"
@@ -180,7 +217,7 @@ const Search = () => {
                             <th style={styles.th}>Title</th>
                             <th style={styles.th}>Author</th>
                             <th style={styles.th}>Category</th>
-                            <th style={styles.th}>Content</th>
+                            <th style={styles.th}>View Content</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -194,7 +231,13 @@ const Search = () => {
                                         {result.authorDetails?.email}
                                     </td>
                                     <td style={styles.td}>{result.category}</td>
-                                    <td style={styles.td}>{result.content}</td>
+                                    <td style={{ ...styles.td, textAlign: 'center' }}>
+                                        <button
+                                            onClick={() => handleViewContent(result)}
+                                            style={styles.viewButton}>
+                                            👁️
+                                        </button>
+                                    </td>
                                 </tr>
                             ))
                         ) : (
