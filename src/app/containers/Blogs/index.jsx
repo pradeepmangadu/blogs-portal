@@ -147,10 +147,18 @@ const Blogs = () => {
   const [editingTitle, setEditingTitle] = useState("");
   const [editingContent, setEditingContent] = useState("");
   const [editingCategory, setEditingCategory] = useState("");
+  const [author, setAuthor] = useState("");
 
   const handleSignOut = () => {
     history.push("/");
   };
+
+  useEffect(() => {
+    const email = localStorage.getItem('authorEmail');
+      if (email) {
+          setAuthor(email.toLowerCase()); // Normalize email
+      }
+  }, []);
 
   const handlePost = async () => {
     if (!newBlogTitle.trim() || !newBlogContent.trim() || !newBlogCategory.trim()) {
@@ -159,6 +167,7 @@ const Blogs = () => {
     }
 
     const newBlog = {
+      author: author,
       title: newBlogTitle,
       content: newBlogContent,
       category: newBlogCategory,
@@ -206,6 +215,7 @@ const Blogs = () => {
     try {
       const blogRef = doc(db, "blogs", editingBlogId);
       await updateDoc(blogRef, {
+        author: author,
         title: editingTitle,
         content: editingContent,
         category: editingCategory,

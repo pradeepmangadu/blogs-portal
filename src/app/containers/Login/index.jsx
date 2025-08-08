@@ -86,7 +86,7 @@ const Login = (props) => {
         return;
       }
       if (userData && userData.password === password) {
-        localStorage.setItem('authorEmail', username);
+        localStorage.setItem('authorEmail', userData.name);
         history.push(paths.BLOGS.path);
       }
       history.push(paths.BLOGS.path);
