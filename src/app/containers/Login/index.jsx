@@ -85,6 +85,10 @@ const Login = (props) => {
         setAlertInfo({ title: 'Sign In Error', message: 'Invalid User Credentials.' });
         return;
       }
+      if (userData && userData.password === password) {
+        localStorage.setItem('authorEmail', userData.name);
+        history.push(paths.BLOGS.path);
+      }
       history.push(paths.BLOGS.path);
     } catch (error) {
       setAlertInfo({ title: 'Login Failed', message: error.message });
