@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useHistory } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { addBlog } from "../../store/blogs/blogsSlice";
+import { paths } from "../../constants/paths";
 import AlertModal from '../../components/AlertModal';
 import { db } from "../../firebase-config";
 import {
@@ -33,10 +34,11 @@ const styles = {
     marginBottom: "40px",
   },
   Header: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: "30px",
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '10px 20px',
+    gap: '20px',
   },
   Title: {
     fontSize: "28px",
@@ -51,6 +53,17 @@ const styles = {
     borderRadius: "8px",
     cursor: "pointer",
     fontWeight: "500",
+  },
+  SearchButton: {
+    padding: "8px 16px",
+    backgroundColor: "#28a745",
+    color: "white",
+    border: "none",
+    borderRadius: "5px",
+    cursor: "pointer",
+    fontSize: "14px",
+    margin: "0 10px",
+    transition: "background-color 0.3s ease",
   },
   Input: {
     width: "100%",
@@ -237,6 +250,9 @@ const Blogs = () => {
       <div style={styles.Card}>
         <div style={styles.Header}>
           <div style={styles.Title}>📝 BlogsPortal</div>
+          <button style={styles.SearchButton} onClick={() => history.push(paths.SEARCH.path)}>
+            Search
+          </button>
           <button style={styles.SignOutButton} onClick={handleSignOut}>
             Sign Out
           </button>

@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from "react";
+import { useHistory } from "react-router-dom";
+import { paths } from "../../../constants/paths";
 import { db } from '../../../firebase-config';
 import {
     collection,
     getDocs,
     query,
     where,
+    doc,
+    getDoc,
 } from "firebase/firestore";
 
 const styles = {
@@ -15,6 +19,7 @@ const styles = {
         background: "linear-gradient(to right, #74ebd5, #ACB6E5)",
         minHeight: '100vh',
         position: 'relative',
+        fontFamily: 'Poppins, sans-serif',
     },
     SearchContainer: {
         display: "flex",
@@ -28,7 +33,8 @@ const styles = {
     },
     SearchInput: {
         padding: "10px",
-        margin: "10px", borderRadius: "5px",
+        margin: "10px",
+        borderRadius: "5px",
         border: "1px solid #ddd",
         width: '300px',
         fontSize: '16px',
@@ -42,10 +48,10 @@ const styles = {
         cursor: "pointer",
         fontSize: "16px",
         margin: "10px",
-        fontSize: "16px",
     },
     SearchResults: {
         width: "80%",
+        marginTop: "100px",
     },
     table: {
         borderCollapse: 'collapse',
@@ -60,7 +66,6 @@ const styles = {
         padding: '8px',
         border: '1px solid #ddd',
         textAlign: 'left',
-        margin: "5px 0",
     },
 };
 
@@ -69,46 +74,78 @@ const Search = () => {
     const [category, setCategory] = useState("");
     const [searchResults, setSearchResults] = useState([]);
     const [categories, setCategories] = useState([]);
+    const history = useHistory();
+
+    useEffect(() => {
+        const email = localStorage.getItem('authorEmail');
+        if (email) {
+            setAuthor(email.toLowerCase()); // Normalize email
+        }
+    }, []);
 
     useEffect(() => {
         const fetchCategories = async () => {
             const blogsCollection = collection(db, 'blogs');
             const blogsSnapshot = await getDocs(blogsCollection);
             const blogsList = blogsSnapshot.docs.map(doc => doc.data());
-            // Create a unique list of categories
             const uniqueCategories = [...new Set(blogsList.map(blog => blog.category))];
             setCategories(uniqueCategories);
         };
 
         fetchCategories();
     }, []);
+
     const handleSearch = () => {
         searchBlogs();
     };
-    const searchBlogs = async () => {
 
-        if (!author && !category) {
-            setSearchResults([]);
-            return;
-        }
-        const blogsRef = collection(db, "blogs");
-        let q = blogsRef
+    const goToBlogsPage = () => {
+        history.push(paths.BLOGS.path);
+    };
+
+    const searchBlogs = async () => {
+        const filters = [];
 
         if (author) {
-            q = query(q, where("author", "==", author));
+            filters.push(where("author", "==", author));
         }
 
         if (category && category !== 'all') {
-            q = query(q, where("category", "==", category));
+            filters.push(where("category", "==", category));
         }
-        const querySnapshot = await getDocs(q);
-        const results = querySnapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-        }));
-        setSearchResults(results);
 
+        if (filters.length === 0) {
+            setSearchResults([]);
+            return;
+        }
+
+        const blogsRef = collection(db, "blogs");
+        const q = query(blogsRef, ...filters);
+        const querySnapshot = await getDocs(q);
+        const results = [];
+
+        for (const docSnap of querySnapshot.docs) {
+            const blogData = docSnap.data();
+            let authorDetails = {};
+
+            if (blogData.authorId) {
+                const authorRef = doc(db, "authors", blogData.authorId);
+                const authorSnap = await getDoc(authorRef);
+                if (authorSnap.exists()) {
+                    authorDetails = authorSnap.data();
+                }
+            }
+
+            results.push({
+                id: docSnap.id,
+                ...blogData,
+                authorDetails,
+            });
+        }
+
+        setSearchResults(results);
     };
+
     return (
         <div style={styles.Screen}>
             <div style={styles.SearchContainer}>
@@ -117,7 +154,7 @@ const Search = () => {
                     style={styles.SearchInput}
                     placeholder="Search by Author"
                     value={author}
-                    onChange={(e) => setAuthor(e.target.value)}
+                    onChange={(e) => setAuthor(e.target.value.toLowerCase())}
                 />
                 <select
                     style={styles.SearchInput}
@@ -133,6 +170,7 @@ const Search = () => {
                     ))}
                 </select>
                 <button style={styles.SearchButton} onClick={handleSearch}>Search</button>
+                <button style={styles.SearchButton} onClick={goToBlogsPage}>Back to Blogs</button>
             </div>
 
             <div style={styles.SearchResults}>
@@ -146,25 +184,31 @@ const Search = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {searchResults && searchResults.length > 0 ? (
+                        {searchResults.length > 0 ? (
                             searchResults.map((result) => (
                                 <tr key={result.id}>
                                     <td style={styles.td}>{result.title}</td>
-                                    <td style={styles.td}>{result.author}</td>
+                                    <td style={styles.td}>
+                                        {result.authorDetails?.name || result.author}
+                                        <br />
+                                        {result.authorDetails?.email}
+                                    </td>
                                     <td style={styles.td}>{result.category}</td>
                                     <td style={styles.td}>{result.content}</td>
                                 </tr>
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="4" style={{ ...styles.td, textAlign: 'center' }}>No results found</td>
+                                <td colSpan="4" style={{ ...styles.td, textAlign: 'center' }}>
+                                    No results found
+                                </td>
                             </tr>
                         )}
                     </tbody>
                 </table>
-
             </div>
         </div>
     );
 };
+
 export default Search;
