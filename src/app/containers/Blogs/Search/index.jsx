@@ -11,6 +11,7 @@ import {
     doc,
     getDoc,
 } from "firebase/firestore";
+import RemoveRedEye from '@mui/icons-material/RemoveRedEye';
 
 const styles = {
     Screen: {
@@ -73,7 +74,8 @@ const styles = {
         border: 'none',
         cursor: 'pointer',
         fontSize: '20px',
-        padding: '0'
+        padding: '0',
+        color: '#007bff'
     },
     modalMessageContent: {
         maxHeight: '60vh',
@@ -235,7 +237,7 @@ const Search = () => {
                                         <button
                                             onClick={() => handleViewContent(result)}
                                             style={styles.viewButton}>
-                                            👁️
+                                            <RemoveRedEye />
                                         </button>
                                     </td>
                                 </tr>
