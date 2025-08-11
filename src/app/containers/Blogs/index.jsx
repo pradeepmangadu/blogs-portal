@@ -13,7 +13,15 @@ import {
   updateDoc,
   deleteDoc,
 } from "firebase/firestore";
-
+import SearchIcon from '@mui/icons-material/Search';
+import PostAddIcon from '@mui/icons-material/PostAdd';
+import IconButton from '@mui/material/IconButton';
+import MenuItem from '@mui/material/MenuItem';
+import Menu from '@mui/material/Menu';
+import Avatar from '@mui/material/Avatar';
+import Button from '@mui/material/Button';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 const styles = {
   Screen: {
     background: "linear-gradient(to right, #74ebd5, #ACB6E5)",
@@ -45,26 +53,6 @@ const styles = {
     fontWeight: "600",
     color: "#333",
   },
-  SignOutButton: {
-    backgroundColor: "#ff6b6b",
-    color: "#fff",
-    border: "none",
-    padding: "10px 20px",
-    borderRadius: "8px",
-    cursor: "pointer",
-    fontWeight: "500",
-  },
-  SearchButton: {
-    padding: "8px 16px",
-    backgroundColor: "#28a745",
-    color: "white",
-    border: "none",
-    borderRadius: "5px",
-    cursor: "pointer",
-    fontSize: "14px",
-    margin: "0 10px",
-    transition: "background-color 0.3s ease",
-  },
   Input: {
     width: "100%",
     padding: "12px",
@@ -76,28 +64,18 @@ const styles = {
     color: "#333",
     outline: "none",
   },
-  Button: {
-    width: "100%",
-    padding: "12px",
-    backgroundColor: "#5ac8fa",
-    color: "#fff",
-    border: "none",
-    borderRadius: "8px",
-    fontSize: "16px",
-    cursor: "pointer",
-    fontWeight: "500",
-    marginBottom: "10px",
-  },
   BlogList: {
-    width: "100%",
-    maxWidth: "800px",
+    overflow: 'scroll', // or 'hidden', 'auto', 'visible'
+    height: '600px',
   },
   BlogItem: {
-    backgroundColor: "#fff",
-    borderRadius: "8px",
-    padding: "20px",
-    marginBottom: "20px",
-    boxShadow: "0 4px 8px rgba(0,0,0,0.05)",
+    backgroundColor: "#fefefe",
+    borderRadius: "12px",
+    boxShadow: "0 8px 16px rgba(0,0,0,0.1)",
+    padding: "30px",
+    width: "100%",
+    maxWidth: "800px",
+    marginBottom: "40px",
   },
   BlogTitle: {
     fontSize: "20px",
@@ -121,16 +99,7 @@ const styles = {
     gap: "10px",
     marginTop: "10px",
   },
-  smallButton: {
-   padding: "6px 12px",
-   backgroundColor: "#5ac8fa",
-   color: "#fff",
-   border: "none",
-   borderRadius: "6px",
-   fontSize: "12px",
-   cursor: "pointer",
-   fontWeight: "500",
-  },
+
 };
 
 const Blogs = () => {
@@ -148,6 +117,15 @@ const Blogs = () => {
   const [editingContent, setEditingContent] = useState("");
   const [editingCategory, setEditingCategory] = useState("");
   const [author, setAuthor] = useState("");
+  const [anchorEl, setAnchorEl] = React.useState(null);
+
+  const handleMenu = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
 
   const handleSignOut = () => {
     history.push("/");
@@ -159,6 +137,36 @@ const Blogs = () => {
           setAuthor(email.toLowerCase()); // Normalize email
       }
   }, []);
+
+  const stringToColor = (string) => {
+    let hash = 0;
+    let i;
+
+    /* eslint-disable no-bitwise */
+    for (i = 0; i < string.length; i += 1) {
+      hash = string.charCodeAt(i) + ((hash << 5) - hash);
+    }
+
+    let color = '#';
+
+    for (i = 0; i < 3; i += 1) {
+      const value = (hash >> (i * 8)) & 0xff;
+      color += `00${value.toString(16)}`.slice(-2);
+    }
+    /* eslint-enable no-bitwise */
+
+    return color;
+  }
+
+  const stringAvatar = (name) => {
+    return {
+      sx: {
+        bgcolor: stringToColor(name),
+        width: 30, height: 30,
+      },
+      children: `${name.split(' ')[0][0]}${name.split(' ').length > 1 ? name.split(' ')[1][0] : ''}`,
+    };
+  }
 
   const handlePost = async () => {
     if (!newBlogTitle.trim() || !newBlogContent.trim() || !newBlogCategory.trim()) {
@@ -260,12 +268,39 @@ const Blogs = () => {
       <div style={styles.Card}>
         <div style={styles.Header}>
           <div style={styles.Title}>📝 BlogsPortal</div>
-          <button style={styles.SearchButton} onClick={() => history.push(paths.SEARCH.path)}>
-            Search
-          </button>
-          <button style={styles.SignOutButton} onClick={handleSignOut}>
-            Sign Out
-          </button>
+          <div>
+              <Button variant="contained" color="success" startIcon={<SearchIcon />} onClick={() => history.push(paths.SEARCH.path)}>
+                Search
+              </Button>
+              <IconButton
+                size="large"
+                aria-label="account of current user"
+                aria-controls="menu-appbar"
+                aria-haspopup="true"
+                onClick={handleMenu}
+                color="inherit"
+              >
+                <Avatar {...stringAvatar(author.toUpperCase())} />
+              </IconButton>
+               <Menu
+                id="menu-appbar"
+                anchorEl={anchorEl}
+                anchorOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right',
+                }}
+                keepMounted
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right',
+                }}
+                open={Boolean(anchorEl)}
+                onClose={handleClose}
+              >
+                <MenuItem onClick={handleClose}>{author.toUpperCase()}</MenuItem>
+                <MenuItem onClick={handleSignOut}>Log out</MenuItem>
+              </Menu>
+          </div>
         </div>
 
         {editingBlogId ? (
@@ -288,8 +323,8 @@ const Blogs = () => {
               onChange={(e) => setEditingContent(e.target.value)}
               placeholder="Edit Content"
             />
-            <button style={styles.Button} onClick={updateBlog}>Update</button>
-            <button style={styles.SignOutButton} onClick={() => setEditingBlogId(null)}>Cancel</button>
+            <Button variant="contained" endIcon={<EditIcon />} onClick={updateBlog}>Update</Button> <span/>
+            <Button variant="contained" color="error" onClick={() => setEditingBlogId(null)}>Cancel</Button>
           </>
         ) : (
           <>
@@ -311,24 +346,29 @@ const Blogs = () => {
               value={newBlogContent}
               onChange={(e) => setNewBlogContent(e.target.value)}
             />
-            <button style={styles.Button} onClick={handlePost}>Post</button>
+            <Button variant="contained" endIcon={<PostAddIcon />} onClick={handlePost}>Post</Button>
           </>
         )}
       </div>
 
-      <div style={styles.BlogList}>
-        {fetchedBlogs.map((blog) => (
-          <div key={blog.id} style={styles.BlogItem}>
-            <h3 style={styles.BlogTitle}>{blog.title}</h3>
-            <p style={styles.BlogCategory}>Category: {blog.category}</p>
-            <p style={styles.BlogContent}>{blog.content}</p>
-            <div style={styles.ActionButtons}>
-              <button style={styles.smallButton} onClick={() => startEditing(blog)}>Edit</button>
-              <button style={styles.SignOutButton} onClick={() => deleteBlog(blog.id)}>Delete</button>
-            </div>
+      {fetchedBlogs.length > 0 && (
+        <>
+          <h4>Recent Blogs: </h4>
+          <div style={styles.BlogList}>
+            {fetchedBlogs.map((blog) => (
+              <div key={blog.id} style={styles.BlogItem}>
+                <h3 style={styles.BlogTitle}>{blog.title}</h3>
+                <p style={styles.BlogCategory}>Category: {blog.category}</p>
+                <p style={styles.BlogContent}>{blog.content}</p>
+                <div style={styles.ActionButtons}>
+                  <Button variant="contained" endIcon={<EditIcon />} onClick={() => startEditing(blog)}>Edit</Button>
+                  <Button variant="contained" endIcon={<DeleteIcon />} color="error" onClick={() => deleteBlog(blog.id)}>Delete</Button>
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </>
+      )}
     </div>
   );
 };

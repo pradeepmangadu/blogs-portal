@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useHistory } from "react-router-dom";
-import AlertModal from "../../../components/AlertModal";
 import { paths } from "../../../constants/paths";
 import { db } from '../../../firebase-config';
 import {
@@ -11,25 +10,35 @@ import {
     doc,
     getDoc,
 } from "firebase/firestore";
-import RemoveRedEye from '@mui/icons-material/RemoveRedEye';
+import Box from '@mui/material/Box';
+import Collapse from '@mui/material/Collapse';
+import IconButton from '@mui/material/IconButton';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Typography from '@mui/material/Typography';
+import Paper from '@mui/material/Paper';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import Button from '@mui/material/Button';
+import SearchIcon from '@mui/icons-material/Search';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 const styles = {
     Screen: {
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        background: "linear-gradient(to right, #74ebd5, #ACB6E5)",
-        minHeight: '100vh',
-        position: 'relative',
-        fontFamily: 'Poppins, sans-serif',
+      	background: "linear-gradient(to right, #74ebd5, #ACB6E5)",
+		minHeight: "100vh",
+		padding: "40px 20px",
+		fontFamily: "Poppins, sans-serif",
+		display: "flex",
+		flexDirection: "column",
+		alignItems: "center",
     },
     SearchContainer: {
-        display: "flex",
-        position: 'absolute',
         top: '20px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        flexDirection: "column",
         alignItems: "center",
         padding: "20px",
     },
@@ -41,75 +50,21 @@ const styles = {
         width: '300px',
         fontSize: '16px',
     },
-    SearchButton: {
-        padding: "10px 20px",
-        backgroundColor: "#007bff",
-        color: "white",
-        border: "none",
-        borderRadius: "5px",
-        cursor: "pointer",
-        fontSize: "16px",
-        margin: "10px",
-    },
-    SearchResults: {
-        width: "80%",
-        marginTop: "100px",
-    },
-    table: {
-        borderCollapse: 'collapse',
-        width: '100%',
-    },
-    th: {
-        backgroundColor: '#f2f2f2',
-        padding: '8px',
-        border: '1px solid #ddd',
-    },
-    td: {
-        padding: '8px',
-        border: '1px solid #ddd',
-        textAlign: 'left',
-    },
-    viewButton: {
-        background: 'none',
-        border: 'none',
-        cursor: 'pointer',
-        fontSize: '20px',
-        padding: '0',
-        color: '#007bff'
-    },
-    modalMessageContent: {
-        maxHeight: '60vh',
-        overflowY: 'auto',
-        whiteSpace: 'pre-wrap',
-        textAlign: 'left',
-    },
 };
+
 
 const Search = () => {
     const [author, setAuthor] = useState("");
     const [category, setCategory] = useState("");
     const [searchResults, setSearchResults] = useState([]);
     const [categories, setCategories] = useState([]);
-    const [showContentModal, setShowContentModal] = useState(false);
-    const [modalContent, setModalContent] = useState({ title: '', content: '' });
     const history = useHistory();
-
     useEffect(() => {
         const email = localStorage.getItem('authorEmail');
         if (email) {
             setAuthor(email.toLowerCase()); // Normalize email
         }
     }, []);
-
-    const handleViewContent = (blog) => {
-        setModalContent({ title: blog.title, content: blog.content });
-        setShowContentModal(true);
-    };
-
-    const handleCloseModal = () => {
-        setShowContentModal(false);
-        setModalContent({ title: '', content: '' });
-    };
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -175,18 +130,7 @@ const Search = () => {
     };
 
     return (
-        <div style={styles.Screen}>
-            {showContentModal && (
-                <AlertModal
-                    title={modalContent.title}
-                    message={(
-                        <div style={styles.modalMessageContent}>
-                            {modalContent.content}
-                        </div>
-                    )}
-                    onClose={handleCloseModal}
-                />
-            )}
+		<div style={styles.Screen}>
             <div style={styles.SearchContainer}>
                 <input
                     type="text"
@@ -208,52 +152,72 @@ const Search = () => {
                         </option>
                     ))}
                 </select>
-                <button style={styles.SearchButton} onClick={handleSearch}>Search</button>
-                <button style={styles.SearchButton} onClick={goToBlogsPage}>Back to Blogs</button>
+                <Button variant="contained" endIcon={<SearchIcon />} onClick={handleSearch}>Search</Button> <span></span>
+                <Button variant="contained" endIcon={<ArrowBackIcon />} color="error" onClick={goToBlogsPage}>Back to Blogs</Button>
             </div>
 
-            <div style={styles.SearchResults}>
-                <table style={styles.table}>
-                    <thead>
-                        <tr>
-                            <th style={styles.th}>Title</th>
-                            <th style={styles.th}>Author</th>
-                            <th style={styles.th}>Category</th>
-                            <th style={styles.th}>View Content</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {searchResults.length > 0 ? (
-                            searchResults.map((result) => (
-                                <tr key={result.id}>
-                                    <td style={styles.td}>{result.title}</td>
-                                    <td style={styles.td}>
-                                        {result.authorDetails?.name || result.author}
-                                        <br />
-                                        {result.authorDetails?.email}
-                                    </td>
-                                    <td style={styles.td}>{result.category}</td>
-                                    <td style={{ ...styles.td, textAlign: 'center' }}>
-                                        <button
-                                            onClick={() => handleViewContent(result)}
-                                            style={styles.viewButton}>
-                                            <RemoveRedEye />
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))
-                        ) : (
-                            <tr>
-                                <td colSpan="4" style={{ ...styles.td, textAlign: 'center' }}>
-                                    No results found
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
-            </div>
+			<TableContainer component={Paper}>
+				<Table aria-label="collapsible table">
+					<TableHead>
+					<TableRow>
+						<TableCell />
+						<TableCell>Title</TableCell>
+						<TableCell>Author</TableCell>
+						<TableCell>Category</TableCell>
+					</TableRow>
+					</TableHead>
+					<TableBody>
+						{searchResults .length > 0 ? (searchResults.map((result) => (
+							<Row key={result.id} result={result} />
+							))
+						) : (
+							<TableRow>
+								<TableCell colSpan="4" align="center">No results found</TableCell>
+							</TableRow>
+						)}
+					</TableBody>
+				</Table>
+    		</TableContainer>
         </div>
     );
 };
+
+function Row(props) {
+  const { result } = props;
+  const [open, setOpen] = React.useState(false);
+  return (
+		<React.Fragment>
+			<TableRow sx={{ '& > *': { borderBottom: 'unset' } }}>
+				<TableCell>
+				<IconButton
+					aria-label="expand row"
+					size="small"
+					onClick={() => setOpen(!open)}
+				>
+					{open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+				</IconButton>
+				</TableCell>
+				<TableCell component="th" scope="row">{result.title}</TableCell>
+				<TableCell> {result.authorDetails?.name || result.author} <br /> {result.authorDetails?.email}</TableCell>
+				<TableCell>{result.category}</TableCell>
+			</TableRow>
+			<TableRow>
+				<TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
+				<Collapse in={open} timeout="auto" unmountOnExit>
+					<Box sx={{ margin: 1 }}>
+						<Typography variant="h6" gutterBottom component="div">
+							{result.title}
+						</Typography>
+						<Typography component="p">
+							{result.content}
+						</Typography>
+					</Box>
+				</Collapse>
+				</TableCell>
+			</TableRow>
+		</React.Fragment>			
+  );
+}
+
 
 export default Search;
